@@ -1,10 +1,11 @@
 {
   "manifest_version": 2,
   "version": "0.0.1",
-  "short_name": "React App",
-  "name": "Create React App Sample",
-  "description": "Sample application showing how to create an extension with Create React App",
+  "short_name": "Timeshit",
+  "name": "Timeshit",
+  "description": "Log timeshit",
   "browser_action": {
+    "default_icon": "img/icon-128.png",
     "default_title": "CRE",
     "default_popup": "popup.html"
   },
@@ -23,7 +24,6 @@
     "128": "img/icon-128.png"
   },
   "options_page": "options.html",
-  "permissions": ["cookies", "storage"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": ["cookies", "*://*.zoho.com/*"],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }

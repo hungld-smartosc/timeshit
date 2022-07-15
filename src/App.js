@@ -1,3 +1,5 @@
+/*global chrome*/
+
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
@@ -25,15 +27,22 @@ function App() {
   const [_user, setUser] = useState('');
   const [_project, pickProject] = useState('');
   const [_task, pickTask] = useState('');
-  const [cookies, setCookies] = useState({});
+  const [CSRF_TOKEN, setToken] = useState('');
   const [_shitDays, setShitdays] = useState({
     needAttendance: {},
     needLog: {},
   });
-  // const _iamadt = localStorage.getItem('_iamadt');
-  // const _iambdt = localStorage.getItem('_iambdt');
-  // const CSRF_TOKEN = localStorage.getItem('CSRF_TOKEN');
-  // console.log('#####', { _iamadt, _iambdt, CSRF_TOKEN });
+  function getCookies(domain, callback) {
+    chrome.cookies.get({ url: domain, name: 'CSRF_TOKEN' }, function (cookie) {
+      if (callback) {
+        callback(cookie.value);
+      }
+    });
+  }
+
+  getCookies('https://people.zoho.com', function (CSRF_TOKEN) {
+    setToken(CSRF_TOKEN);
+  });
 
   useEffect(() => {
     init({
@@ -43,25 +52,15 @@ function App() {
       setShitdays,
       pickProject,
       pickTask,
-      cookies,
+      CSRF_TOKEN,
     });
-  }, [cookies]);
+  }, [CSRF_TOKEN]);
   const handleProjectChange = (e) => {
     pickProject(e.target.value);
   };
   const handleTaskChange = (e) => {
     pickTask(e.target.value);
   };
-  const handleInputChange = (e) => {
-    setCookies((prevState) => ({
-      ...prevState,
-      [e.target.name]: e.target.value,
-    }));
-    // if (!cookies._iamadt && !cookies._iambdt && !cookies.CSRF_TOKEN) {
-    //   localStorage.setItem([e.target.name], e.target.value);
-    // }
-  };
-
   const handleLog = async () => {
     const logTimeSheetPromises = [];
     for (const day in _shitDays.needLog) {
@@ -72,7 +71,7 @@ function App() {
         date: day,
         hour: _shitDays.needLog[day],
       };
-      logTimeSheetPromises.push(logTimeSheet(cookies, body));
+      logTimeSheetPromises.push(logTimeSheet(CSRF_TOKEN, body));
     }
     await Promise.all(logTimeSheetPromises);
     await init({
@@ -82,36 +81,12 @@ function App() {
       setShitdays,
       pickProject,
       pickTask,
-      cookies,
+      CSRF_TOKEN,
     });
     alert('Done');
   };
   return (
     <div className="App">
-      <label>_iamadt</label>
-      <input
-        type="text"
-        name="_iamadt"
-        value={cookies._iamadt || ''}
-        onChange={handleInputChange}
-      />
-      <br />
-      <label>_iambdt</label>
-      <input
-        type="text"
-        name="_iambdt"
-        value={cookies._iambdt || ''}
-        onChange={handleInputChange}
-      />
-      <br />
-      <label>CSRF_TOKEN</label>
-      <input
-        type="text"
-        name="CSRF_TOKEN"
-        value={cookies.CSRF_TOKEN || ''}
-        onChange={handleInputChange}
-      />
-      <br />
       <label for="Project">Project:</label>
       <select
         value={_project}
@@ -163,28 +138,26 @@ async function init({
   setShitdays,
   pickProject,
   pickTask,
-  cookies,
+  CSRF_TOKEN,
 }) {
-  const { tasks, projects, userId } = await fetchTasksAndProjects(cookies);
+  const { tasks, projects, userId } = await fetchTasksAndProjects(CSRF_TOKEN);
   setUser(userId);
   setProjects(projects);
   setTasks(tasks);
   //Set default project and task
   pickProject(projects[0].Id);
   pickTask(tasks[0].Id);
-  const shitDays = await getShitDays(cookies);
+  const shitDays = await getShitDays(CSRF_TOKEN);
   setShitdays(shitDays);
 }
 
 // API
-async function fetchAttendance(cookie) {
-  const { _iamadt, _iambdt, CSRF_TOKEN } = cookie;
+async function fetchAttendance(CSRF_TOKEN) {
   const response = await fetch(
     'https://people.zoho.com/hrportal1524046581683/AttendanceViewAction.zp',
     {
       headers: {
         'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        cookie: `_iamadt=${_iamadt}; _iambdt=${_iambdt}; CSRF_TOKEN=${CSRF_TOKEN};`,
       },
       body: `mode=getAttList&conreqcsr=${CSRF_TOKEN}&loadToday=false&view=month&preMonth=0`,
       method: 'POST',
@@ -200,14 +173,12 @@ async function fetchAttendance(cookie) {
   return dayAndTime;
 }
 
-async function fetchTasksAndProjects(cookie) {
-  const { _iamadt, _iambdt, CSRF_TOKEN } = cookie;
+async function fetchTasksAndProjects(CSRF_TOKEN) {
   const response = await fetch(
     'https://people.zoho.com/hrportal1524046581683/formAction.zp',
     {
       headers: {
         'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        cookie: `_iamadt=${_iamadt}; _iambdt=${_iambdt}; CSRF_TOKEN=${CSRF_TOKEN};`,
       },
       body: `formId=412762000003736053&mode=getFormComponents&subMode=ADD&conreqcsr=${CSRF_TOKEN}`,
       method: 'POST',
@@ -237,14 +208,12 @@ async function fetchTasksAndProjects(cookie) {
   };
 }
 
-async function getLoggedDay(cookie) {
-  const { _iamadt, _iambdt, CSRF_TOKEN } = cookie;
+async function getLoggedDay(CSRF_TOKEN) {
   const response = await fetch(
     'https://people.zoho.com/hrportal1524046581683/viewAction.zp',
     {
       headers: {
         'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        cookie: `_iamadt=${_iamadt}; _iambdt=${_iambdt}; CSRF_TOKEN=${CSRF_TOKEN};`,
       },
       body: `mode=fetchRecords&formId=412762000003736053&viewId=412762000003736055&isOnload=false&typeOfView=self&startInd=0&limit=30&conreqcsr=${CSRF_TOKEN}`,
       method: 'POST',
@@ -263,11 +232,11 @@ async function getLoggedDay(cookie) {
     .filter((day) => day.includes(currentMonth));
 }
 
-async function getShitDays(cookie) {
+async function getShitDays(CSRF_TOKEN) {
   const needLog = {};
   const needAttendance = {};
-  const attendance = await fetchAttendance(cookie);
-  const loggedDays = await getLoggedDay(cookie);
+  const attendance = await fetchAttendance(CSRF_TOKEN);
+  const loggedDays = await getLoggedDay(CSRF_TOKEN);
   loggedDays.forEach((loggedDay) => delete attendance[loggedDay]);
   for (const remainDay in attendance) {
     if (remainDay < currentDay) {
@@ -283,8 +252,7 @@ async function getShitDays(cookie) {
   return { needLog, needAttendance };
 }
 
-async function logTimeSheet(cookie, body) {
-  const { _iamadt, _iambdt, CSRF_TOKEN } = cookie;
+async function logTimeSheet(CSRF_TOKEN, body) {
   // Date:  04-Jul-2022
   const { projectId, taskId, userId, hour, date } = body;
   await fetch(
@@ -292,7 +260,6 @@ async function logTimeSheet(cookie, body) {
     {
       headers: {
         'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        cookie: `_iamadt=${_iamadt}; _iambdt=${_iambdt}; CSRF_TOKEN=${CSRF_TOKEN};`,
       },
       body: `isPicklistIdEnabled=true&Emp_info=${userId}&Task=${taskId}&Timesheet_Hours=${hour}&Project=${projectId}&Work_location=412762000010757909&Date=${date}&Task_Description=&Billable_Hours=0&zp_tableName=t_412762000003736053&conreqcsr=${CSRF_TOKEN}&zp_formId=412762000003736053&zp_mode=addRecord&isDraft=false&isResubmit=false`,
       method: 'POST',
@@ -319,4 +286,5 @@ function getDay(date) {
   return d.join('-');
 }
 /////////////////////////////////////////////////////
+
 export default App;
