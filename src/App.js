@@ -40,7 +40,7 @@ function App() {
     });
   }
 
-  getCookies('https://people.zoho.com', function (CSRF_TOKEN) {
+  getCookies('https://people.zoho.com' ?? 'https://people.smartosc.com', function (CSRF_TOKEN) {
     setToken(CSRF_TOKEN);
   });
 
