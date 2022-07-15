@@ -1,7 +1,7 @@
 /*global chrome*/
 
 import React, { useState, useEffect } from 'react';
-import './App.css';
+import styles from './styles/App.module.scss';
 
 const MONTHS = [
   'Jan',
@@ -87,27 +87,34 @@ function App() {
   };
   return (
     <div className="App">
-      <label for="Project">Project:</label>
-      <select
-        value={_project}
-        name="Project"
-        id="Project"
-        onChange={handleProjectChange}
-      >
-        {_projects.map((project) => (
-          <option value={project.Id}>{project.Value}</option>
-        ))}
-      </select>
-      <br />
-      <label for="Task">Task:</label>
-      <select value={_task} name="Task" id="Task" onChange={handleTaskChange}>
-        {_tasks.map((task) => (
-          <option value={task.Id}>{task.Value}</option>
-        ))}
-      </select>
-      <br />
-
-      <div>
+      <div className={styles.projectSelectContainer}>
+        <label for="Project" className={styles.labelTitle}>Project: </label>
+        <select
+          value={_project}
+          name="Project"
+          id="Project"
+          onChange={handleProjectChange}
+          className={styles.selectContainer}
+        >
+          {_projects.map((project) => (
+            <option value={project.Id}>
+              <p dangerouslySetInnerHTML={{ __html: project.Value }} />
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className={styles.taskSelectContainer}>
+        <label for="Task" className={styles.labelTitle}>Task: </label>
+        <select value={_task} name="Task" id="Task" onChange={handleTaskChange} className={styles.selectContainer}
+        >
+          {_tasks.map((task) => (
+            <option value={task.Id}>
+              <p dangerouslySetInnerHTML={{ __html: task.Value }} />
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className={styles.shitDayContainer}>
         <b>Các ngày cần log timesheet:</b>
         <ol>
           {Object.keys(_shitDays.needLog).map((day) => (
@@ -116,8 +123,9 @@ function App() {
             </li>
           ))}
         </ol>
-        <button onClick={handleLog}>Log</button>
-        <br />
+        <button onClick={handleLog} className={styles.logButton}>Log</button>
+      </div>
+      <div className={styles.attendanceDayContainer}>
         <b>Các ngày cần xin attendance:</b>
         <ol>
           {Object.keys(_shitDays.needAttendance).map((day) => (

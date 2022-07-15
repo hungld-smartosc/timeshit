@@ -1,0 +1,50 @@
+* {
+  font-size: 14px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.App {
+  text-align: left;
+}
+
+.labelTitle {
+  font-weight: bold;
+}
+
+.projectSelectContainer {
+  margin-bottom: 10px;
+  margin-top: 10px;
+  margin-left: 10px;
+  
+  .selectContainer {
+    min-height: 30px;
+    max-width: 250px;
+    cursor: pointer;
+  }
+}
+
+.taskSelectContainer {
+  margin-bottom: 10px;
+  margin-left: 10px;
+  
+  .selectContainer {
+    min-height: 30px;
+    max-width: 220px;
+    cursor: pointer;
+  }
+}
+
+.shitDayContainer {
+  margin-bottom: 10px;
+  margin-left: 10px;
+
+  .logButton {
+    cursor: pointer;
+
+  }
+}
+
+.attendanceDayContainer {
+  margin-bottom: 10px;
+  margin-left: 10px;
+}
