@@ -87,6 +87,9 @@ function App() {
   };
   return (
     <div className="App">
+      <div>
+        <p className={styles.appTitle}>Timesheet</p>
+      </div>
       <div className={styles.projectSelectContainer}>
         <label for="Project" className={styles.labelTitle}>Project: </label>
         <select
