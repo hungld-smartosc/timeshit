@@ -1,7 +1,7 @@
 /*global chrome*/
 
 import React, { useState, useEffect } from 'react';
-import './Options.css';
+import styles from './Options.css';
 
 const MONTHS = [
   'Jan',
@@ -20,6 +20,7 @@ const MONTHS = [
 const today = new Date();
 const currentMonth = MONTHS[today.getMonth()];
 const currentDay = getDay(today);
+// const DOMAIN = window.location.protocol + '//' + window.location.hostname;
 
 function App() {
   const [_projects, setProjects] = useState([]);
@@ -40,20 +41,29 @@ function App() {
     });
   }
 
-  getCookies('https://people.zoho.com', function (CSRF_TOKEN) {
-    setToken(CSRF_TOKEN);
-  });
+  useEffect(() => {
+    getCookies('https://people.zoho.com', function (CSRF_TOKEN) {
+      CSRF_TOKEN && setToken(CSRF_TOKEN);
+      if (!CSRF_TOKEN) {
+        getCookies('https://people.smartosc.com', function (CSRF_TOKEN) {
+          CSRF_TOKEN && setToken(CSRF_TOKEN);
+        });
+      }
+    });
+  }, []);
 
   useEffect(() => {
-    init({
-      setProjects,
-      setTasks,
-      setUser,
-      setShitdays,
-      pickProject,
-      pickTask,
-      CSRF_TOKEN,
-    });
+    if (CSRF_TOKEN) {
+      init({
+        setProjects,
+        setTasks,
+        setUser,
+        setShitdays,
+        pickProject,
+        pickTask,
+        CSRF_TOKEN,
+      });
+    }
   }, [CSRF_TOKEN]);
   const handleProjectChange = (e) => {
     pickProject(e.target.value);
@@ -87,27 +97,46 @@ function App() {
   };
   return (
     <div className="App">
-      <label for="Project">Project:</label>
-      <select
-        value={_project}
-        name="Project"
-        id="Project"
-        onChange={handleProjectChange}
-      >
-        {_projects.map((project) => (
-          <option value={project.Id}>{project.Value}</option>
-        ))}
-      </select>
-      <br />
-      <label for="Task">Task:</label>
-      <select value={_task} name="Task" id="Task" onChange={handleTaskChange}>
-        {_tasks.map((task) => (
-          <option value={task.Id}>{task.Value}</option>
-        ))}
-      </select>
-      <br />
-
       <div>
+        <p className={styles.appTitle}>Timesheet</p>
+      </div>
+      <div className={styles.projectSelectContainer}>
+        <label for="Project" className={styles.labelTitle}>
+          Project:{' '}
+        </label>
+        <select
+          value={_project}
+          name="Project"
+          id="Project"
+          onChange={handleProjectChange}
+          className={styles.selectContainer}
+        >
+          {_projects.map((project) => (
+            <option value={project.Id}>
+              <p dangerouslySetInnerHTML={{ __html: project.Value }} />
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className={styles.taskSelectContainer}>
+        <label for="Task" className={styles.labelTitle}>
+          Task:{' '}
+        </label>
+        <select
+          value={_task}
+          name="Task"
+          id="Task"
+          onChange={handleTaskChange}
+          className={styles.selectContainer}
+        >
+          {_tasks.map((task) => (
+            <option value={task.Id}>
+              <p dangerouslySetInnerHTML={{ __html: task.Value }} />
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className={styles.shitDayContainer}>
         <b>Các ngày cần log timesheet:</b>
         <ol>
           {Object.keys(_shitDays.needLog).map((day) => (
@@ -116,8 +145,11 @@ function App() {
             </li>
           ))}
         </ol>
-        <button onClick={handleLog}>Log</button>
-        <br />
+        <button onClick={handleLog} className={styles.logButton}>
+          Log
+        </button>
+      </div>
+      <div className={styles.attendanceDayContainer}>
         <b>Các ngày cần xin attendance:</b>
         <ol>
           {Object.keys(_shitDays.needAttendance).map((day) => (
@@ -146,7 +178,7 @@ async function init({
   setTasks(tasks);
   //Set default project and task
   pickProject(projects[0].Id);
-  pickTask(tasks[0].Id);
+  pickTask(tasks[2].Id);
   const shitDays = await getShitDays(CSRF_TOKEN);
   setShitdays(shitDays);
 }

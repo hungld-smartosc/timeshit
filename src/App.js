@@ -20,6 +20,7 @@ const MONTHS = [
 const today = new Date();
 const currentMonth = MONTHS[today.getMonth()];
 const currentDay = getDay(today);
+// const DOMAIN = window.location.protocol + '//' + window.location.hostname;
 
 function App() {
   const [_projects, setProjects] = useState([]);
@@ -40,20 +41,29 @@ function App() {
     });
   }
 
-  getCookies('https://people.zoho.com' ?? 'https://people.smartosc.com', function (CSRF_TOKEN) {
-    setToken(CSRF_TOKEN);
-  });
+  useEffect(() => {
+    getCookies('https://people.zoho.com', function (CSRF_TOKEN) {
+      CSRF_TOKEN && setToken(CSRF_TOKEN);
+      if (!CSRF_TOKEN) {
+        getCookies('https://people.smartosc.com', function (CSRF_TOKEN) {
+          CSRF_TOKEN && setToken(CSRF_TOKEN);
+        });
+      }
+    });
+  }, []);
 
   useEffect(() => {
-    init({
-      setProjects,
-      setTasks,
-      setUser,
-      setShitdays,
-      pickProject,
-      pickTask,
-      CSRF_TOKEN,
-    });
+    if (CSRF_TOKEN) {
+      init({
+        setProjects,
+        setTasks,
+        setUser,
+        setShitdays,
+        pickProject,
+        pickTask,
+        CSRF_TOKEN,
+      });
+    }
   }, [CSRF_TOKEN]);
   const handleProjectChange = (e) => {
     pickProject(e.target.value);
@@ -91,7 +101,9 @@ function App() {
         <p className={styles.appTitle}>Timesheet</p>
       </div>
       <div className={styles.projectSelectContainer}>
-        <label for="Project" className={styles.labelTitle}>Project: </label>
+        <label for="Project" className={styles.labelTitle}>
+          Project:{' '}
+        </label>
         <select
           value={_project}
           name="Project"
@@ -107,8 +119,15 @@ function App() {
         </select>
       </div>
       <div className={styles.taskSelectContainer}>
-        <label for="Task" className={styles.labelTitle}>Task: </label>
-        <select value={_task} name="Task" id="Task" onChange={handleTaskChange} className={styles.selectContainer}
+        <label for="Task" className={styles.labelTitle}>
+          Task:{' '}
+        </label>
+        <select
+          value={_task}
+          name="Task"
+          id="Task"
+          onChange={handleTaskChange}
+          className={styles.selectContainer}
         >
           {_tasks.map((task) => (
             <option value={task.Id}>
@@ -126,7 +145,9 @@ function App() {
             </li>
           ))}
         </ol>
-        <button onClick={handleLog} className={styles.logButton}>Log</button>
+        <button onClick={handleLog} className={styles.logButton}>
+          Log
+        </button>
       </div>
       <div className={styles.attendanceDayContainer}>
         <b>Các ngày cần xin attendance:</b>
@@ -157,7 +178,7 @@ async function init({
   setTasks(tasks);
   //Set default project and task
   pickProject(projects[0].Id);
-  pickTask(tasks[0].Id);
+  pickTask(tasks[2].Id);
   const shitDays = await getShitDays(CSRF_TOKEN);
   setShitdays(shitDays);
 }
