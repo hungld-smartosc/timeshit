@@ -3,7 +3,16 @@
 import React, { useState, useEffect } from "react";
 import styles from "./index.css";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
-import { Backdrop, Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
+import {
+  Backdrop,
+  Button,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
@@ -22,23 +31,7 @@ const MONTHS = [
   "Dec",
 ];
 const today = new Date();
-const currentMonth = MONTHS[today.getMonth()];
 const currentDay = getDay(today);
-
-const userTabsName = [
-  {
-    Timesheet: {
-      Forms: [
-        {
-          displayName: "Log Timesheet",
-        },
-        {
-          displayName: "Log Timesheet Approval",
-        },
-      ],
-    },
-  },
-];
 
 // const DOMAIN = window.location.protocol + '//' + window.location.hostname;
 function App() {
@@ -47,9 +40,9 @@ function App() {
   const [_user, setUser] = useState("");
   const [_project, pickProject] = useState("");
   const [_task, pickTask] = useState("");
-  const [_preMonth, setPreMonth] = useState(0)
-  const [_currentPickDate, setCurrentPickDate] = useState(new Date())
-  const [_startWorkingDate, setStartWorkingDate] = useState('')
+  const [_preMonth, setPreMonth] = useState(0);
+  const [_currentPickDate, setCurrentPickDate] = useState(new Date());
+  const [_startWorkingDate, setStartWorkingDate] = useState("");
   const [_tabs, setTabs] = useState({});
   const [_loading, setLoading] = useState(true);
   const [CSRF_TOKEN, setToken] = useState(
@@ -83,23 +76,25 @@ function App() {
     }
 
     const getInitTab = async () => {
-      const initTabs = await initPeopleZoho(CSRF_TOKEN);  
+      const initTabs = await initPeopleZoho(CSRF_TOKEN);
       setTabs(initTabs);
     };
 
-
     getInitTab();
-    setLoading(false)
+    setLoading(false);
   }, []);
 
   useEffect(() => {
-    setLoading(true)
+    setLoading(true);
     const getInitInfoUser = async () => {
       const { tasks, projects, userId } = await fetchTasksAndProjects(
         CSRF_TOKEN
       );
-      const { beginningDate } = await fetchWorkingInformation(CSRF_TOKEN, userId)
-      setStartWorkingDate(new Date(beginningDate))
+      const { beginningDate } = await fetchWorkingInformation(
+        CSRF_TOKEN,
+        userId
+      );
+      setStartWorkingDate(new Date(beginningDate));
       setUser(userId);
       setProjects(projects);
       setTasks(tasks);
@@ -109,19 +104,19 @@ function App() {
       init({
         setShitdays,
         CSRF_TOKEN,
-        beginningDate
+        beginningDate,
       });
-    }
-    getInitInfoUser()
-  }, [_tabs])
+    };
+    getInitInfoUser();
+  }, [_tabs]);
 
   useEffect(() => {
     if (CSRF_TOKEN && _tabs && _startWorkingDate) {
-      setLoading(true)
+      setLoading(true);
       init({
         setShitdays,
         CSRF_TOKEN,
-        _startWorkingDate
+        _startWorkingDate,
       });
     }
   }, [_preMonth]);
@@ -133,19 +128,19 @@ function App() {
   };
 
   const handleChangeDateLogTime = (e) => {
-    const currentDate = new Date()
-    const pickDate = new Date(e)
-    const currentYear = currentDate.getFullYear()
-    const pickYear = pickDate.getFullYear()
-    const diffYear = currentYear - pickYear
-    const diffMonth = currentDate.getMonth() -  pickDate.getMonth();
-    const preMonth = diffYear > 0 ? diffYear * diffMonth : diffMonth
-    setCurrentPickDate(e)
-    setPreMonth(preMonth)
-  }
+    const currentDate = new Date();
+    const pickDate = new Date(e);
+    const currentYear = currentDate.getFullYear();
+    const pickYear = pickDate.getFullYear();
+    const diffYear = currentYear - pickYear;
+    const diffMonth = currentDate.getMonth() - pickDate.getMonth();
+    const preMonth = diffYear > 0 ? diffYear * diffMonth : diffMonth;
+    setCurrentPickDate(e);
+    setPreMonth(preMonth);
+  };
 
   const handleLog = async () => {
-    setLoading(true)
+    setLoading(true);
     const logTimeSheetPromises = [];
     for (const day in _shitDays.needLog) {
       const body = {
@@ -161,19 +156,15 @@ function App() {
     await init({
       setShitdays,
       CSRF_TOKEN,
-      _startWorkingDate
+      _startWorkingDate,
     });
     alert("Done");
   };
 
-  async function init({
-    setShitdays,
-    CSRF_TOKEN,
-    beginningDate
-  }) {
+  async function init({ setShitdays, CSRF_TOKEN, beginningDate }) {
     const shitDays = await getShitDays(CSRF_TOKEN, beginningDate);
     setShitdays(shitDays);
-    setLoading(false)
+    setLoading(false);
   }
 
   async function initPeopleZoho(CSRF_TOKEN) {
@@ -214,8 +205,7 @@ function App() {
     return dayAndTime;
   }
 
-  async function fetchWorkingInformation(CSRF_TOKEN,userId) {
-
+  async function fetchWorkingInformation(CSRF_TOKEN, userId) {
     const response = await fetch(
       "https://people.zoho.com/hrportal1524046581683/ssAction.zp",
       {
@@ -229,18 +219,19 @@ function App() {
     const {
       singleRecord: {
         message: {
-          recordDetails: [,{
-            column1: [,,,,,,,{
-              componentValue
-            }]
-          }]
-        }
-      }
+          recordDetails: [
+            ,
+            {
+              column1: [, , , , , , , { componentValue }],
+            },
+          ],
+        },
+      },
     } = await response.json();
 
     return {
-      beginningDate: componentValue
-    }
+      beginningDate: componentValue,
+    };
   }
 
   async function fetchTasksAndProjects(CSRF_TOKEN) {
@@ -296,7 +287,9 @@ function App() {
         headers: {
           "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
         },
-        body: `mode=fetchRecords&formId=${pcIdLogTimeSheet}&viewId=${viewId}&isOnload=true&typeOfView=mydep&startInd=1&limit=${dayDiff(beginningDate ?? _startWorkingDate)}&conreqcsr=${CSRF_TOKEN}`,
+        body: `mode=fetchRecords&formId=${pcIdLogTimeSheet}&viewId=${viewId}&isOnload=true&typeOfView=mydep&startInd=1&limit=${dayDiff(
+          beginningDate ?? _startWorkingDate
+        )}&conreqcsr=${CSRF_TOKEN}`,
         method: "POST",
       }
     );
@@ -353,109 +346,145 @@ function App() {
   }
 
   return (
-    <div className="App" style={{
-      marginLeft: '30px'
-    }}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <div>
-        <p className={styles.appTitle}>Timesheet</p>
-      </div>
-      <div className={styles.projectSelectContainer} style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start'
-
-      }}>
-      <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={_loading}
-      >
-        <CircularProgress color="inherit" />
-      </Backdrop>
-      <DesktopDatePicker
-          views={["year", "month"]}
-          label="Month"
-          minDate={_startWorkingDate}
-          maxDate={new Date()}
-          inputFormat="MM/YYYY"
-          value={_currentPickDate}
-          onChange={handleChangeDateLogTime}
-          renderInput={(params) => <TextField {...params} />}
-        />
-
-      <FormControl style={{
-        width: '259px',
-        maxHeight: '59px',
-        margin: '10px 0'
-      }}>
-        <InputLabel id="Project" className={styles.labelTitle}>Project</InputLabel>
-        <Select
-          labelId="Project"
-          id="Project-select"
-          value={_project}
-          label="Project"
-          onChange={handleProjectChange}
-          className={styles.selectContainer}
-          style={{
-            maxHeight: '59px'
-          }}
+    <div
+      className="App"
+      style={{
+        marginLeft: 30,
+        paddingRight: 30,
+        height: 300,
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: 9,
+      }}
+    >
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <h2 className={styles.appTitle}>Timesheet</h2>
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: 15 }}
+          className={styles.projectSelectContainer}
         >
-          {_projects.map((project) => (
-            <MenuItem value={project.Id}>
-              <p dangerouslySetInnerHTML={{ __html: project.Value }} />
-            </MenuItem>
-          ))}
-        </Select>
-        
-      </FormControl>
+          <Backdrop
+            sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+            open={_loading}
+          >
+            <CircularProgress color="inherit" />
+          </Backdrop>
+          <DesktopDatePicker
+            views={["year", "month"]}
+            label="Month"
+            minDate={_startWorkingDate}
+            maxDate={new Date()}
+            inputFormat="MM/YYYY"
+            value={_currentPickDate}
+            onChange={handleChangeDateLogTime}
+            renderInput={(params) => (
+              <TextField
+                sx={{ input: { height: 18, fontSize: 15 } }}
+                fullWidth
+                {...params}
+              />
+            )}
+          />
 
-      <FormControl style={{
-        width: '259px'
-      }}>
-        <InputLabel id="Task" className={styles.labelTitle}>Task</InputLabel>
-        <Select
-          labelId="Task"
-          id="Task-select"
-          value={_task}
-          label="Task"
-          onChange={handleTaskChange}
-          className={styles.selectContainer}
-          style={{
-            maxHeight: '59px'
-          }}
-        >
-          {_tasks.map((task) => (
-            <MenuItem value={task.Id}>
-                <p dangerouslySetInnerHTML={{ __html: task.Value }} />
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      </div>
-      <div className={styles.taskSelectContainer}>
+          <FormControl fullWidth>
+            <InputLabel id="Project" className={styles.labelTitle}>
+              Project
+            </InputLabel>
+            <Select
+              fullWidth
+              labelId="Project"
+              id="Project-select"
+              value={_project}
+              label="Project"
+              onChange={handleProjectChange}
+              className={styles.selectContainer}
+              sx={{ height: 50, fontSize: 15 }}
+            >
+              {_projects.map((project) => (
+                <MenuItem sx={{ height: 50, fontSize: 15 }} value={project.Id}>
+                  <p dangerouslySetInnerHTML={{ __html: project.Value }} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-      </div>
-      <div className={styles.shitDayContainer}>
-        <b>Các ngày cần log timesheet:</b>
-        <ol>
-          {Object.keys(_shitDays.needLog).map((day) => (
-            <li key={day}>
-              {day}: {_shitDays.needLog[day]}h
-            </li>
-          ))}
-        </ol>
-        <Button disabled={Object.keys(_shitDays.needLog).length === 0} onClick={handleLog} className={styles.logButton} variant="outlined">Log</Button>
-      </div>
-      <div className={styles.attendanceDayContainer}>
-        <b>Các ngày cần xin attendance:</b>
-        <ol>
-          {Object.keys(_shitDays.needAttendance).map((day) => (
-            <li key={day}>
-              {day}: {_shitDays.needAttendance[day]}h
-            </li>
-          ))}
-        </ol>
-      </div>
+          <FormControl fullWidth>
+            <InputLabel id="Task" className={styles.labelTitle}>
+              Task
+            </InputLabel>
+            <Select
+              fullWidth
+              labelId="Task"
+              id="Task-select"
+              value={_task}
+              label="Task"
+              onChange={handleTaskChange}
+              className={styles.selectContainer}
+              sx={{ height: 50, fontSize: 15 }}
+            >
+              {_tasks.map((task) => (
+                <MenuItem sx={{ height: 50, fontSize: 15 }} value={task.Id}>
+                  <p dangerouslySetInnerHTML={{ __html: task.Value }} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
+        <div className={styles.shitDayContainer}>
+          <h4 style={{ fontSize: 16 }}>Các ngày cần log timesheet:</h4>
+          <ol style={{ paddingInlineStart: "unset" }}>
+            {Object.keys(_shitDays.needLog).map((day, index) => (
+              <li
+                style={{
+                  fontSize: 14,
+                }}
+                key={day}
+              >
+                <span style={{ display: "inline-block", width: 20 }}>
+                  {index + 1}.{" "}
+                </span>
+                <span style={{ display: "inline-block", width: 100 }}>
+                  {day}:{" "}
+                </span>
+                <span style={{ display: "inline-block", width: 20 }}>
+                  {_shitDays.needLog[day]}h
+                </span>
+              </li>
+            ))}
+          </ol>
+          <Button
+            disabled={Object.keys(_shitDays.needLog).length === 0}
+            onClick={handleLog}
+            variant="outlined"
+            sx={{ width: 210 }}
+          >
+            Log
+          </Button>
+        </div>
+        <div className={styles.attendanceDayContainer}>
+          <h4 style={{ fontSize: 16 }}>Các ngày cần xin attendance:</h4>
+          <ol style={{ paddingInlineStart: "unset" }}>
+            {Object.keys(_shitDays.needAttendance).map((day, index) => (
+              <li
+                style={{
+                  fontSize: 14,
+                }}
+                key={day}
+              >
+                <span style={{ display: "inline-block", width: 20 }}>
+                  {index + 1}.{" "}
+                </span>
+                <span style={{ display: "inline-block", width: 100 }}>
+                  {day}:{" "}
+                </span>
+                <span style={{ display: "inline-block", width: 20 }}>
+                  {_shitDays.needAttendance[day]}h
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </LocalizationProvider>
     </div>
   );
@@ -518,11 +547,11 @@ function sumStrings(a, b) {
 /**
  * Get day diff between two date.
  *
- * @param {string} from 
+ * @param {string} from
  * @param {string} to
  * @return {number} result
  */
-function dayDiff(from, to = new Date()){
+function dayDiff(from, to = new Date()) {
   return Math.floor((Date.parse(to) - Date.parse(from)) / 86400000);
 }
 
